@@ -1,0 +1,24 @@
+[package]
+name = "gbonds"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85"
+description = "A terminal music player with local recommendations"
+license = "AGPL-3.0-or-later"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+crossterm = "0.29"
+rand = "0.9"
+ratatui = "0.30"
+rustfft = "6"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+walkdir = "2"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true

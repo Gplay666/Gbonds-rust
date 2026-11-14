@@ -1,0 +1,23 @@
+PLAN.md
+TODO.md
+
+# Cargo build output
+/target/
+
+# Мусор рабочий
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Мусор секретный
+.env
+.env.*
+
+# Мусор логовый
+*.log
+*.profraw
+*.profdata
+perf.data*
