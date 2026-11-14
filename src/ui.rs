@@ -1197,18 +1197,45 @@ fn draw_player(frame: &mut Frame, app: &App, area: Rect) {
         .current_track()
         .map(|track| track.title_artist())
         .unwrap_or_else(|| "Nothing playing — select a track and press Enter".to_string());
-    let label = truncate_chars(&label, inner.width.saturating_sub(28) as usize);
-    let time = format!(
-        "{}  ·  vol {}%",
-        format_time(app.player.position()) + " / " + &format_time(app.player.duration()),
-        app.player.volume
+    let time = Span::styled(
+        format!(
+            "{}  ·  vol {}%",
+            format_time(app.player.position()) + " / " + &format_time(app.player.duration()),
+            app.player.volume
+        ),
+        theme.muted(),
     );
+    let mut suffix = vec![time];
+    if app.player.shuffle {
+        suffix.push(Span::styled(" · shuffle", Style::new().fg(theme.accent)));
+    }
+    if app.player.repeat != "off" {
+        suffix.push(Span::styled(
+            format!(" · repeat:{}", app.player.repeat),
+            Style::new().fg(theme.accent),
+        ));
+    }
+    // Hide the mode labels only when the terminal is too narrow to keep a
+    // useful track title. At normal widths they stay visible at all times.
+    let full_width: u16 = suffix.iter().map(Span::width).sum::<usize>() as u16;
+    let suffix_width = if full_width + 16 <= inner.width {
+        full_width
+    } else {
+        suffix[0].width() as u16
+    };
+    suffix.truncate(if suffix_width == full_width {
+        suffix.len()
+    } else {
+        1
+    });
 
-    let label_area = Layout::horizontal([
-        Constraint::Min(10),
-        Constraint::Length(time.chars().count() as u16 + 1),
-    ])
-    .split(chunks[0]);
+    let label_area = Layout::horizontal([Constraint::Min(10), Constraint::Length(suffix_width)])
+        .split(chunks[0]);
+    let label = if label_area[0].width > 4 {
+        truncate_chars(&label, label_area[0].width as usize - 4)
+    } else {
+        String::new()
+    };
     frame.render_widget(
         Paragraph::new(Line::from(vec![
             Span::styled(format!(" {icon} "), icon_style),
@@ -1224,7 +1251,7 @@ fn draw_player(frame: &mut Frame, app: &App, area: Rect) {
         label_area[0],
     );
     frame.render_widget(
-        Paragraph::new(Line::from(Span::styled(time, theme.muted()))).alignment(Alignment::Right),
+        Paragraph::new(Line::from(suffix)).alignment(Alignment::Right),
         label_area[1],
     );
 
